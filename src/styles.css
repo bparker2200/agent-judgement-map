@@ -1,0 +1,63 @@
+/* ════════════════════════════════════════════════════════════════════════
+   GLOBAL STYLING.
+
+   The chart itself styles most of its pieces inline (the colors are tied to
+   the SVG drawing in ProjectShape.jsx — see the `C` palette there). This file
+   holds the page-level styling: the dark background, the web fonts, the
+   page layout, the keyframes, and the hover states for chart elements.
+   ════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #07090d;
+  color: #e9e4d8;
+}
+
+/* Page layout — center the chart on the page */
+.app {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.app__inner {
+  width: 100%;
+  max-width: 1040px;
+}
+
+/* Animations used by the chart */
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.gate-in { animation: dropIn .5s cubic-bezier(.2, .8, .2, 1) both; }
+
+/* Interactive chart elements */
+.ps-node { cursor: pointer; }
+
+.ps-icon {
+  transition: all .16s ease;
+  cursor: pointer;
+}
+.ps-icon:hover {
+  color: #48cfc0;
+  border-color: #48cfc055;
+}
+
+.ps-row { transition: background .14s ease; cursor: pointer; }
+.ps-row:hover { background: #1c2630; }

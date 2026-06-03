@@ -1,0 +1,139 @@
+# Agent Judgement Map
+
+**A visual grammar for deciding where human judgement belongs in agentic project work.**
+
+> **Autonomy in the valleys. Humans at the summits.**
+
+Agent Judgement Map plots a project as a line over time. The x-axis is **real time** (the work unfolding); the y-axis is **leverage** (how much a wrong call would cost). The line rises into **peaks** where human judgement matters most and sinks into **valleys** where an agent can safely keep moving on its own.
+
+It's not an argument for constant oversight. It's an argument for **well-placed intervention** — a few human gates at the summits, autonomy everywhere else.
+
+Today it's a **retrospective / audit** tool: you plot a finished project and read where human judgement actually mattered. (A prospective "predicted-vs-realized" mode is on the roadmap — see [DESIGN.md](DESIGN.md).)
+
+It's implemented as a small React template (Vite + plain CSS) so you can fork it, drop in your own project's events, and see the shape of where judgement lived.
+
+## Screenshot
+
+![Agent Judgement Map — a leverage line over time, with humans gated in at the peaks](docs/screenshot.png)
+
+## How to read the chart
+
+- **The line is the agent** — always running, left to right, across real time.
+- **The peaks are leverage** — moments where being wrong is expensive, far-reaching, hard to undo, or uncertain. Put a human here.
+- **The valleys are autonomy** — low-stakes, reversible, high-confidence work. Let the agent run.
+- **The glyphs** mark who's involved at each point:
+  - **Human gate** — a human decision or approval (a summit).
+  - **Collaboration** — human and agent working together.
+  - **Agent autonomous** — the agent working alone (a valley).
+
+Hover any point to see the four signals that produced its leverage. Click to pin it.
+
+## Quick start
+
+You'll need [Node.js](https://nodejs.org) 18+ installed.
+
+```bash
+# 1. install dependencies
+npm install
+
+# 2. run it locally (opens a dev server, usually http://localhost:5173)
+npm run dev
+
+# 3. build for production when you're ready to deploy
+npm run build
+```
+
+## Editing your project data
+
+**This is the one file you edit:** [`src/projectData.js`](src/projectData.js).
+
+Each project is a list of events. Each event has a `type`, a `time`, a `title`, and four `scores`:
+
+```js
+{
+  id: "pricing",
+  name: "Realtime Pricing Engine",
+  when: "May 20 – Jun 2, 2026",
+  benchmark: { suite: "internal-evals v3", score: 88 },
+  events: [
+    {
+      type: "gate",                  // "ai" | "gate" | "collab"
+      time: "2026-05-21T10:00",      // real timestamp — drives the x-axis
+      title: "Human picks the rate strategy",
+      scores: {
+        costOfError: 78,             // how expensive it is to be wrong
+        blastRadius: 70,             // how widely a wrong call spreads
+        reversibility: 30,           // how easily it's undone (high = lower leverage)
+        confidence: 60,              // the agent's confidence (high = lower leverage)
+      },
+    },
+    // ...more events
+  ],
+}
+```
+
+Change the names, times, and scores — the leverage line redraws itself. For a clean starting point, copy the minimal template in [`examples/sample-projects.js`](examples/sample-projects.js).
+
+## What the leverage score means
+
+Leverage is **derived, not declared.** Each event's four scores are blended into one number (0–100) in [`src/scoring.js`](src/scoring.js):
+
+> Leverage rises with **cost of error** and **blast radius**, and rises as **reversibility** and **confidence** fall.
+
+In plain terms: high cost, wide blast radius, low reversibility, or low confidence all push a moment toward needing human judgement. Those are your summits. You can retune how much each signal matters by editing the `WEIGHTS` in `scoring.js`.
+
+> **The default weights are illustrative, not validated** — they were tuned so the sample data tells a clean story. Don't cite them as if `0.32` means something. See [DESIGN.md](DESIGN.md) for the reasoning, including why `cost / blast / reversibility` are deployment-context facts (not eval outputs) and why the blend should arguably be multiplicative.
+
+## Status & limitations
+
+This is a **concept demo with illustrative scoring**, released so the idea can be used and built on — not a calibrated risk system. Three things to know before you trust a curve:
+
+- **The weights are illustrative.** They shape the demo; they aren't derived from anything.
+- **Self-reported confidence can hide the peak that matters.** An overconfident agent flattens its own summit — exactly where a human was needed. Use calibrated/external confidence, never raw self-report.
+- **The cost of arrival isn't drawn yet.** A human gate blocks while you wait for the human; that latency is a real cost the line doesn't show.
+
+The chart also can't show risk it was never given: **unlogged decisions are invisible** (a non-event is a blank, not a low point), and **slow-burn risk** (many trivial steps compounding) reads as a flat valley. Full design rationale, known failure modes, and roadmap live in [DESIGN.md](DESIGN.md).
+
+## How to use this
+
+1. Plot your project's meaningful events over time.
+2. Score each event by consequence and uncertainty.
+3. Look for the peaks.
+4. Add human gates at the peaks.
+5. Let agents move through the valleys.
+
+## Customizing the style
+
+The visual look (dark background, glowing line, glyphs) lives in two places:
+
+- Page-level styling — background, fonts, animations — is in [`src/styles.css`](src/styles.css).
+- The chart's color palette is the `C` object near the top of [`src/ProjectShape.jsx`](src/ProjectShape.jsx). Change those hex values to re-theme the graph.
+
+## Project structure
+
+```
+agent_judgement_map/
+  README.md            ← you are here (for humans)
+  AGENTS.md            ← guidance for AI coding agents
+  LICENSE
+  package.json
+  index.html
+  vite.config.js
+  src/
+    main.jsx           entry point
+    App.jsx            loads the data and renders the chart
+    ProjectShape.jsx   the main visual component
+    projectData.js     ← edit your project/event data here
+    scoring.js         the leverage calculation
+    styles.css         page-level styling
+  examples/
+    sample-projects.js a minimal copy-paste template
+```
+
+## Contributing
+
+This is a small, friendly template — contributions and forks are welcome. If you're opening a pull request, please keep the core idea intact (_autonomy in the valleys, humans at the summits_), keep dependencies minimal, and make sure `npm run build` passes before you push.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Brandon Parker.
