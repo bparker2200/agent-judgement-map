@@ -130,9 +130,13 @@ agent_judgement_map/
     sample-projects.js a minimal copy-paste template
 ```
 
-## Contributing
+## Project status
 
-This is a small, friendly template — contributions and forks are welcome. If you're opening a pull request, please keep the core idea intact (_autonomy in the valleys, humans at the summits_), keep dependencies minimal, and make sure `npm run build` passes before you push.
+**Provided as-is, and not actively maintained.** This is shared as a concept and a starting point, not a supported product — think of it as a seed, not a service. The most useful thing you can do with it is **fork it and make it yours.** The MIT license means you're free to use, change, and ship it however you like, no permission needed.
+
+Issues and pull requests are welcome, but please don't expect a fast response — or any response. If something's broken or you've got a better idea, the fastest path is your own fork. If you build something good on top of this, it'd be lovely to see it.
+
+If you do open a PR, please keep the core idea intact (_autonomy in the valleys, humans at the summits_), keep dependencies minimal, and make sure `npm run build` passes.
 
 ## License
 
