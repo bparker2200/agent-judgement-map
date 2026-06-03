@@ -4,6 +4,8 @@
 
 > **Autonomy in the valleys. Humans at the summits.**
 
+**[▶ Live demo](https://bparker2200.github.io/agent-judgement-map/)**
+
 Agent Judgement Map plots a project as a line over time. The x-axis is **real time** (the work unfolding); the y-axis is **leverage** (how much a wrong call would cost). The line rises into **peaks** where human judgement matters most and sinks into **valleys** where an agent can safely keep moving on its own.
 
 It's not an argument for constant oversight. It's an argument for **well-placed intervention** — a few human gates at the summits, autonomy everywhere else.
