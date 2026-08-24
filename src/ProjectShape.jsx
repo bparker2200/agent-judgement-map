@@ -333,6 +333,7 @@ export default function ProjectShape() {
                 <EvalBar label="cost of error" value={focusNode.scores.costOfError} color={C.human} />
                 <EvalBar label="blast radius" value={focusNode.scores.blastRadius} color={C.human} />
                 <EvalBar label="reversibility" value={focusNode.scores.reversibility} color={C.ai} />
+                <EvalBar label="detectability" value={focusNode.scores.detectability ?? 50} color={C.ai} />
                 <EvalBar label="confidence" value={focusNode.scores.confidence} color={C.ai} />
               </div>
             </div>

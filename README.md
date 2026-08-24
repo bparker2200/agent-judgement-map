@@ -49,7 +49,7 @@ npm run build
 
 **This is the one file you edit:** [`src/projectData.js`](src/projectData.js).
 
-Each project is a list of events. Each event has a `type`, a `time`, a `title`, and four `scores`:
+Each project is a list of events. Each event has a `type`, a `time`, a `title`, and five `scores`:
 
 ```js
 {
@@ -66,7 +66,8 @@ Each project is a list of events. Each event has a `type`, a `time`, a `title`, 
         costOfError: 78,             // how expensive it is to be wrong
         blastRadius: 70,             // how widely a wrong call spreads
         reversibility: 30,           // how easily it's undone (high = lower leverage)
-        confidence: 60,              // the agent's confidence (high = lower leverage)
+        detectability: 35,           // how quickly you'd notice (high = lower leverage)
+        confidence: 60,              // the agent's calibrated confidence (high = lower leverage)
       },
     },
     // ...more events
@@ -78,20 +79,27 @@ Change the names, times, and scores — the leverage line redraws itself. For a 
 
 ## What the leverage score means
 
-Leverage is **derived, not declared.** Each event's four scores are blended into one number (0–100) in [`src/scoring.js`](src/scoring.js):
+Leverage is **derived, not declared.** Each event's five scores are blended into one number (0–100) in [`src/scoring.js`](src/scoring.js). The blend is **expected-loss-shaped** — a product, not a sum:
 
-> Leverage rises with **cost of error** and **blast radius**, and rises as **reversibility** and **confidence** fall.
+> **leverage = severity × exposure**
+> **severity** — how bad it is if wrong — rises with **cost of error** and **blast radius**, and falls as **reversibility** and **detectability** rise.
+> **exposure** — how likely it is to be wrong — falls as **confidence** rises, but only so far.
 
-In plain terms: high cost, wide blast radius, low reversibility, or low confidence all push a moment toward needing human judgement. Those are your summits. You can retune how much each signal matters by editing the `WEIGHTS` in `scoring.js`.
+In plain terms: high cost, wide blast radius, low reversibility, or low detectability all push a moment toward needing human judgement. Those are your summits. Because the signals multiply rather than average, a moment that's fully reversible or instantly detectable is a valley no matter how costly it looks, and a catastrophic signal can't be averaged away by three benign ones.
 
-> **The default weights are illustrative, not validated** — they were tuned so the sample data tells a clean story. Don't cite them as if `0.32` means something. See [DESIGN.md](DESIGN.md) for the reasoning, including why `cost / blast / reversibility` are deployment-context facts (not eval outputs) and why the blend should arguably be multiplicative.
+Two knobs in `scoring.js`:
+
+- `SEVERITY_WEIGHTS` — how much each context signal counts toward severity.
+- `CONFIDENCE_TRUST` — how much of the agent's confidence you bank. At the default `0.5`, confidence can cut leverage by at most half. Raise it toward `1.0` only if confidence comes from a calibrated eval rather than the agent's own report.
+
+> **The default weights are illustrative, not validated** — they were tuned so the sample data tells a clean story. Don't cite them as if `0.35` means something. See [DESIGN.md](DESIGN.md) for the reasoning, including why `cost / blast / reversibility / detectability` are deployment-context facts (not eval outputs).
 
 ## Status & limitations
 
 This is a **concept demo with illustrative scoring**, released so the idea can be used and built on — not a calibrated risk system. Three things to know before you trust a curve:
 
 - **The weights are illustrative.** They shape the demo; they aren't derived from anything.
-- **Self-reported confidence can hide the peak that matters.** An overconfident agent flattens its own summit — exactly where a human was needed. Use calibrated/external confidence, never raw self-report.
+- **Self-reported confidence can hide the peak that matters.** An overconfident agent flattens its own summit — exactly where a human was needed. `CONFIDENCE_TRUST` caps how much it can flatten, but the fix is calibrated/external confidence, never raw self-report.
 - **The cost of arrival isn't drawn yet.** A human gate blocks while you wait for the human; that latency is a real cost the line doesn't show.
 
 The chart also can't show risk it was never given: **unlogged decisions are invisible** (a non-event is a blank, not a low point), and **slow-burn risk** (many trivial steps compounding) reads as a flat valley. Full design rationale, known failure modes, and roadmap live in [DESIGN.md](DESIGN.md).

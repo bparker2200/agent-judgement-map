@@ -34,14 +34,14 @@ examples/
 ## Where things live
 
 - **Editable content:** `src/projectData.js` — project names, dates, and events.
-- **Scoring logic:** `src/scoring.js` — `WEIGHTS` and `deriveLeverage()`.
+- **Scoring logic:** `src/scoring.js` — `SEVERITY_WEIGHTS`, `CONFIDENCE_TRUST`, and `deriveLeverage()`.
 - **Visual component:** `src/ProjectShape.jsx` — the `C` color palette is near the top.
 - **Styling:** `src/styles.css`.
 
 ## Safe to edit
 
 - Sample data in `src/projectData.js` and `examples/sample-projects.js`.
-- Scoring weights in `src/scoring.js` (if the user asks to retune leverage).
+- Scoring weights and `CONFIDENCE_TRUST` in `src/scoring.js` (if the user asks to retune leverage). Keep the blend multiplicative — see DESIGN.md for why an additive sum was replaced.
 - Colors in the `C` palette and values in `src/styles.css`.
 - Copy/labels and README prose.
 

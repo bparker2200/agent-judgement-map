@@ -18,14 +18,23 @@ The pitch sometimes sounds prospective ("decide where humans *should* intervene"
 
 ## The scoring model
 
-Leverage is derived from four signals per event (`src/scoring.js`):
+Leverage is derived from five signals per event (`src/scoring.js`):
 
 | signal | 0–100 | direction |
 |---|---|---|
 | `costOfError` | how expensive it is to be wrong | higher → more leverage |
 | `blastRadius` | how widely a wrong call propagates | higher → more leverage |
 | `reversibility` | how easily it's undone | higher → **less** leverage |
-| `confidence` | the agent's confidence | higher → **less** leverage |
+| `detectability` | how quickly you'd notice it went wrong | higher → **less** leverage |
+| `confidence` | the agent's calibrated confidence | higher → **less** leverage |
+
+They combine as expected loss — **how bad if wrong × how likely to be wrong**:
+
+```
+severity = cost^0.35 · blast^0.25 · (1 − reversibility)^0.25 · (1 − detectability)^0.15   (weighted geometric mean, 0–1)
+exposure = 1 − CONFIDENCE_TRUST · confidence                                            (0.5–1 at the default trust of 0.5)
+leverage = 100 · severity · exposure
+```
 
 ### The category error to avoid
 
@@ -34,20 +43,20 @@ It's tempting to say "derive all four from an eval." **That's a conflation of tw
 The pipeline that actually holds up is **two-source**:
 
 - **`confidence` ← the eval.** This is the one signal that genuinely comes from there — ideally a calibrated confidence or pass-rate on the *task class*, **not** the agent's in-the-moment self-report (see Failure modes).
-- **`cost / blast / reversibility` ← a context layer.** A risk taxonomy that's either human-authored per task type or estimated by a classifier reading the task description. The eval can *nudge* cost (frequent failures raise expected loss) but doesn't set its magnitude.
+- **`cost / blast / reversibility / detectability` ← a context layer.** A risk taxonomy that's either human-authored per task type or estimated by a classifier reading the task description. The eval can *nudge* cost (frequent failures raise expected loss) but doesn't set its magnitude.
 
 ### The weights are illustrative, not validated
 
-The current weights (`cost 0.32, blast 0.28, rev 0.25, conf 0.15`) were tuned until the demo curve told a clean story — gates peak, autonomous stretches dip. **Do not cite `0.32` as if it means something.** If you fork this, the magnitudes are yours to set.
+The current severity weights (`cost 0.35, blast 0.25, rev 0.25, detect 0.15`) and `CONFIDENCE_TRUST = 0.5` were tuned until the demo curve told a clean story — gates peak, autonomous stretches dip. **Do not cite `0.35` as if it means something.** If you fork this, the magnitudes are yours to set.
 
-What *is* worth preserving isn't the numbers — it's two structural commitments:
+What *is* worth preserving isn't the numbers — it's three structural commitments:
 
-1. **Reversibility and confidence are inverted** (more reversible, more confident → *less* need for a human).
-2. **Leverage should be expected-loss-shaped, not a flat sum.** The real quantity is closer to `P(error) × impact` — expected regret. The current additive blend can't express that: it lets a confident agent on a catastrophic task average out to "medium." Moving the blend from additive to **multiplicative** is the most important scoring improvement on the roadmap.
+1. **Reversibility, detectability and confidence are inverted** (more reversible, more detectable, more confident → *less* need for a human).
+2. **Leverage is expected-loss-shaped, not a flat sum.** The quantity is `P(error) × impact` — expected regret. The original additive blend couldn't express that: it let a fully reversible, instantly detectable mistake read as "medium" because it was costly on paper. Severity is now a weighted *geometric* mean, so mitigating signals compound (fully reversible → near zero, whatever the cost) and a single catastrophic signal can't be averaged away. It is still a mean rather than a raw product so the number stays on a readable 0–100 scale — a raw product of five terms collapses everything into single digits.
+3. **Confidence can discount leverage, but not erase it.** Pure expected loss would let a 95%-confident agent cut a catastrophic moment by 95% — which is precisely the "overconfident agent flattens its own summit" failure below, written into the math. `CONFIDENCE_TRUST` caps the discount (at 0.5, confidence can halve leverage at most). It is the one place the model deliberately refuses to be a clean expected value, because the confidence signal is the one it trusts least. Set it to 1.0 only when confidence comes from a calibrated eval.
 
 ### Dimensions left out that probably belong in
 
-- **Detectability** — can you even tell when it went wrong? Undetectable errors are far more dangerous than loud ones. (This is the one most worth adding; it interacts with the failure modes below.)
 - Novelty / precedent
 - Regulatory exposure
 - Time pressure
@@ -57,7 +66,7 @@ What *is* worth preserving isn't the numbers — it's two structural commitments
 
 The encoding's strength (height = leverage, readable at a glance) is also its danger: a smooth, confident line *looks* trustworthy. It is blindest exactly where it's most dangerous.
 
-- **Self-reported confidence flattens its own peaks.** An overconfident agent reports high confidence → the `(100 − confidence)` term shrinks → leverage drops → the peak flattens → no human is prompted → which is precisely the moment a human was needed. Always use calibrated or external confidence, never raw self-report.
+- **Self-reported confidence flattens its own peaks.** An overconfident agent reports high confidence → exposure shrinks → leverage drops → the peak flattens → no human is prompted → which is precisely the moment a human was needed. `CONFIDENCE_TRUST` bounds the damage (a summit can be halved, not erased), but the real fix is upstream: always use calibrated or external confidence, never raw self-report.
 - **Unlogged moments are invisible, not low.** The chart only plots events someone marked as decisions. The most dangerous step is often the one nobody flagged — and a non-event is an *invisible* point, not a low one.
 - **Slow-burn risk can't be seen.** A run of individually-trivial steps that compound. Each point sits low; the aggregate is catastrophic. Height-per-event can't see accumulation.
 
@@ -85,10 +94,8 @@ Ideas that belong in the visual language if this is going to teach the concept t
 
 ### Scoring / data roadmap
 
-- Multiplicative (expected-loss) blend instead of additive sum.
 - Two-source pipeline: eval-derived confidence + a context-layer risk taxonomy.
 - Calibrated confidence and an uncertainty band.
-- A `detectability` signal.
 - Predicted-vs-realized overlay (the honest prospective mode).
 - Sequence / real-time axis toggle.
 

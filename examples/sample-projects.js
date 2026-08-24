@@ -10,7 +10,7 @@
      type    "ai" | "gate" | "collab"
      time    an ISO-ish timestamp — drives the x-axis (real time)
      title   a short human-readable label
-     scores  the four signals that produce leverage (see ../src/scoring.js)
+     scores  the five signals that produce leverage (see ../src/scoring.js)
    ════════════════════════════════════════════════════════════════════════ */
 
 export const projects = [
@@ -21,14 +21,14 @@ export const projects = [
     benchmark: { suite: "internal-evals v3", score: 90 },
     events: [
       // valley — agent sets things up on its own
-      { type: "ai",   time: "2026-06-01T09:00", title: "Agent scaffolds the work",       scores: { costOfError: 20, blastRadius: 18, reversibility: 92, confidence: 90 } },
-      { type: "ai",   time: "2026-06-01T15:00", title: "Agent drafts the first version", scores: { costOfError: 34, blastRadius: 30, reversibility: 82, confidence: 84 } },
+      { type: "ai",   time: "2026-06-01T09:00", title: "Agent scaffolds the work",       scores: { costOfError: 20, blastRadius: 18, reversibility: 92, detectability: 90, confidence: 90 } },
+      { type: "ai",   time: "2026-06-01T15:00", title: "Agent drafts the first version", scores: { costOfError: 34, blastRadius: 30, reversibility: 82, detectability: 60, confidence: 84 } },
 
       // summit — the human makes the call that's expensive to get wrong
-      { type: "gate", time: "2026-06-02T11:00", title: "Human approves the direction",   scores: { costOfError: 86, blastRadius: 80, reversibility: 22, confidence: 56 } },
+      { type: "gate", time: "2026-06-02T11:00", title: "Human approves the direction",   scores: { costOfError: 86, blastRadius: 80, reversibility: 22, detectability: 30, confidence: 56 } },
 
       // tail — agent finishes up, low stakes again
-      { type: "ai",   time: "2026-06-03T14:00", title: "Agent ships and reports",        scores: { costOfError: 24, blastRadius: 22, reversibility: 86, confidence: 88 } },
+      { type: "ai",   time: "2026-06-03T14:00", title: "Agent ships and reports",        scores: { costOfError: 24, blastRadius: 22, reversibility: 86, detectability: 85, confidence: 88 } },
     ],
   },
 ];
